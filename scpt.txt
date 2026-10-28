@@ -1,0 +1,42 @@
+@echo off
+setlocal enabledelayedexpansion
+
+REM ===== asc_to_asc exe : keep your existing line exactly as it is =====
+SET runfile="P:\INBLC\W&E\R and C\005 Projects\20261026_Golden Beach\70 WIP\74 Modelling\TUFLOW Model\asc_to_asc.2024-06-AF\asc_to_asc_w64.exe"
+pushd "%~dp0"
+
+REM ===== Settings =====
+set VER=08
+set SCN=Low_Exg01
+set AEP=p2EY
+set VAR=h_HR
+set DURS=00120m 00180m 00270m 00360m 00540m 00720m 01080m
+set TPS=tp1 tp2 tp3 tp4 tp5 tp6 tp7 tp8 tp9 tp10
+
+REM ===== Loop through durations =====
+for %%d in (%DURS%) do (
+    set "LIST="
+    set /a N=0
+
+    REM ----- Loop through temporal patterns -----
+    for %%t in (%TPS%) do (
+        set "F=..\%VER%\%SCN%_%AEP%_%%d_%%t\2d\grids\GBE_Lake_%SCN%_%AEP%_%%d_%%t_%VER%_%VAR%_Max.flt"
+        if exist "!F!" (
+            set LIST=!LIST! "!F!"
+            set /a N+=1
+        ) else (
+            echo MISSING: !F!
+        )
+    )
+
+    echo.
+    echo ===== %%d : !N! grids found =====
+    if !N! EQU 10 (
+        %runfile% -b -statMedian !LIST! -out GBE_Lake_%SCN%_%AEP%_%%d_%VER%_%VAR%
+    ) else (
+        echo SKIPPED %%d - expected 10 grids
+    )
+)
+
+popd
+pause
